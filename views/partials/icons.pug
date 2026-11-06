@@ -1,0 +1,88 @@
+mixin temperatureIcon()
+  svg(viewBox="0 0 64 120" fill="none")
+    rect(x="24" y="4" width="16" height="76" rx="8" fill="#f44336" fill-opacity="0.15" stroke="#f44336" stroke-width="3")
+    rect(x="29" y="8" width="6" height="60" rx="3" fill="#f44336")
+    circle(cx="32" cy="92" r="18" fill="#f44336")
+    circle(cx="32" cy="92" r="10" fill="white" fill-opacity="0.4")
+
+    line(x1="40" y1="24" x2="46" y2="24" stroke="#f44336" stroke-width="2")
+    line(x1="40" y1="36" x2="46" y2="36" stroke="#f44336" stroke-width="2")
+    line(x1="40" y1="48" x2="46" y2="48" stroke="#f44336" stroke-width="2")
+    line(x1="40" y1="60" x2="46" y2="60" stroke="#f44336" stroke-width="2")
+
+    text(x="6" y="10" font-size="9" fill="#f44336") °C
+
+
+mixin humidityIcon()
+  svg(viewBox="0 0 80 100" fill="none")
+    path(d="M40 10 C40 10 10 45 10 65 A30 30 0 0 0 70 65 C70 45 40 10 40 10Z" fill="#2196F3" fill-opacity="0.2" stroke="#2196F3" stroke-width="3")
+    path(d="M40 18 C40 18 15 50 15 65 A25 25 0 0 0 65 65 C65 50 40 18 40 18Z" fill="#2196F3")
+    ellipse(cx="30" cy="55" rx="5" ry="8" fill="white" fill-opacity="0.4" transform="rotate(-20 30 55)")
+
+
+mixin sunlightIcon()
+  svg(viewBox="0 0 100 100" fill="none")
+    circle(cx="50" cy="50" r="20" fill="#FFC107")
+
+    line(x1="50" y1="5" x2="50" y2="18" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="50" y1="82" x2="50" y2="95" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="5" y1="50" x2="18" y2="50" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="82" y1="50" x2="95" y2="50" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="18" y1="18" x2="27" y2="27" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="73" y1="73" x2="82" y2="82" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="82" y1="18" x2="73" y2="27" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+    line(x1="27" y1="73" x2="18" y2="82" stroke="#FFC107" stroke-width="4" stroke-linecap="round")
+
+
+mixin fanIcon()
+  svg.home-device-svg(viewBox="0 0 100 100" fill="none" )
+    circle(cx="50" cy="50" r="46" stroke="#F44336" stroke-width="3")
+
+    path(d="M50 50 C50 50 35 40 30 25 C40 22 52 32 50 50Z" fill="#F44336")
+    path(d="M50 50 C50 50 65 40 75 52 C68 60 55 55 50 50Z" fill="#F44336")
+    path(d="M50 50 C50 50 48 68 35 72 C30 62 38 52 50 50Z" fill="#F44336")
+
+    circle(cx="50" cy="50" r="7" fill="#F44336")
+    circle(cx="50" cy="50" r="3" fill="white")
+
+
+mixin acIcon()
+  svg.home-device-svg(viewBox="0 0 100 80" fill="none")
+    rect(x="5" y="8" width="90" height="42" rx="6" stroke="#2196F3" stroke-width="3")
+    rect(x="10" y="13" width="80" height="32" rx="4" fill="#2196F3")
+
+    line(x1="15" y1="22" x2="85" y2="22" stroke="#2196F3" stroke-width="2")
+    line(x1="15" y1="30" x2="85" y2="30" stroke="#2196F3" stroke-width="2")
+    line(x1="15" y1="38" x2="85" y2="38" stroke="#2196F3" stroke-width="2")
+
+    path(d="M25 58 Q30 65 25 72" stroke="#2196F3" stroke-width="2.5" stroke-linecap="round" fill="none")
+    path(d="M50 56 Q55 65 50 74" stroke="#2196F3" stroke-width="2.5" stroke-linecap="round" fill="none")
+    path(d="M75 58 Q80 65 75 72" stroke="#2196F3" stroke-width="2.5" stroke-linecap="round" fill="none")
+
+
+mixin bulbIcon()
+  svg.home-device-svg(viewBox="0 0 80 100" fill="none" )
+    path(d="M40 10 C22 10 10 24 10 40 C10 54 20 62 24 70 L56 70 C60 62 70 54 70 40 C70 24 58 10 40 10Z" stroke="#FFC107" stroke-width="3" fill="none")
+
+    rect(x="26" y="70" width="28" height="8" rx="2" stroke="#FFC107" stroke-width="2.5" fill="none")
+    rect(x="28" y="78" width="24" height="8" rx="2" stroke="#FFC107" stroke-width="2.5" fill="none")
+
+    path(d="M32 55 L36 45 L44 45 L48 55" stroke="#FFC107" stroke-width="2" stroke-linecap="round" fill="none")
+
+    line(x1="40" y1="2" x2="40" y2="8" stroke="#FFC107" stroke-width="3" stroke-linecap="round")
+    line(x1="8" y1="14" x2="13" y2="18" stroke="#FFC107" stroke-width="3" stroke-linecap="round")
+    line(x1="72" y1="14" x2="67" y2="18" stroke="#FFC107" stroke-width="3" stroke-linecap="round")
+    line(x1="2" y1="42" x2="8" y2="42" stroke="#FFC107" stroke-width="3" stroke-linecap="round")
+    line(x1="78" y1="42" x2="72" y2="42" stroke="#FFC107" stroke-width="3" stroke-linecap="round")
+
+
+mixin searchIcon(className)
+  svg(class=className viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2")
+    circle(cx="8.5" cy="8.5" r="5.5")
+    line(x1="13" y1="13" x2="18" y2="18")
+
+
+mixin avatarIcon()
+  svg(viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg")
+    circle(cx="40" cy="30" r="18" fill="#ccc")
+    path(d="M8 72 C8 52 72 52 72 72" fill="#ccc")

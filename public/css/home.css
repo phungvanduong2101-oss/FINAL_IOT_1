@@ -1,0 +1,438 @@
+/* HOME — RESET & BASE */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  min-height: 100vh;
+}
+
+
+/* HOME — NAVBAR */
+
+.home-navbar {
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.home-nav-list {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  gap: 48px;
+}
+
+.home-nav-item a {
+  text-decoration: none;
+  color: #555;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding-bottom: 4px;
+  transition: color 0.2s;
+}
+
+.home-nav-item a:hover {
+  color: #333;
+}
+
+.home-nav-item.home-active a {
+  color: #111;
+  border-bottom: 2.5px solid #111;
+  font-weight: 700;
+}
+
+
+/* HOME — DASHBOARD */
+
+.home-dashboard {
+  display: flex;
+  gap: 16px;
+  padding: 20px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.home-charts-section {
+  flex: 0 0 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+} 
+
+
+.home-devices-section {
+  flex: 0 0 30%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+/* HOME — SENSORS & CHARTS */
+
+/* Thẻ cảm biến */
+
+.home-sensor-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  min-height: 180px;
+}
+
+/* Thông tin cảm biến */
+
+.home-sensor-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 16px;
+  min-width: 108px;
+  max-width: 120px;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.home-sensor-label {
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.home-sensor-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-sensor-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.home-sensor-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+
+/* Nhiệt độ */
+
+.home-temp-info {
+  border-right: 3px solid #ffd0d0;
+  background: #fff8f8;
+}
+
+.home-temp-info .home-sensor-label,
+.home-temp-info .home-sensor-value {
+  color: #f44336;
+}
+
+/* Độ ẩm */
+
+.home-humid-info {
+  border-right: 3px solid #cce5ff;
+  background: #f6faff;
+}
+
+.home-humid-info .home-sensor-label,
+.home-humid-info .home-sensor-value {
+  color: #2196f3;
+}
+
+/* Ánh sáng */
+
+.home-light-info {
+  border-right: 3px solid #fff0cc;
+  background: #fffdf4;
+}
+
+.home-light-info .home-sensor-label,
+.home-light-info .home-sensor-value {
+  color: #e6a800;
+}
+
+/* Vùng biểu đồ */
+
+.home-chart-wrapper {
+  flex: 1;
+  padding: 12px 16px 10px 8px;
+  min-width: 0;
+  position: relative;
+}
+
+.home-chart-wrapper canvas {
+  width: 100% !important;
+  height: 155px !important;
+}
+
+
+/* HOME — DEVICES & LOADING */
+
+.home-devices-header {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  padding: 13px 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-gear-icon {
+  font-size: 1.15rem;
+}
+
+.home-device-card {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: box-shadow 0.2s;
+}
+
+.home-device-card:hover {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+}
+
+.home-device-icon-wrap {
+  width: 72px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-device-svg {
+  width: 150%;
+  height: 150%;
+}
+
+.home-device-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.home-device-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  align-self: flex-end;
+}
+
+/* Trạng thái OFF */
+
+.home-device-card.home-off .home-device-icon-wrap svg path,
+.home-device-card.home-off .home-device-icon-wrap svg circle,
+.home-device-card.home-off .home-device-icon-wrap svg rect,
+.home-device-card.home-off .home-device-icon-wrap svg line {
+  stroke: #bbb;
+  fill: #bbb;
+}
+
+.home-device-card.home-off .home-device-icon-wrap svg [fill="none"] {
+  fill: none;
+}
+
+.home-device-card.home-off .home-device-icon-wrap svg [fill="white"],
+.home-device-card.home-off .home-device-icon-wrap svg [fill="#eee"] {
+  fill: #f5f5f5;
+}
+
+/* Trạng thái loading */
+
+.home-device-card.home-loading {
+  pointer-events: none; /* khong cho click */
+  cursor: wait;
+}
+
+.home-device-card.home-loading > :not(.home-loading-text) {
+  opacity: 0.3;
+}
+
+.home-device-card .home-loading-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  z-index: 10;
+}
+
+.home-device-card .home-loading-text:empty {
+  display: none;
+}
+
+
+/* HOME — TOGGLE SWITCH */
+
+.home-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.home-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.home-slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: 28px;
+  transition: background 0.3s;
+}
+
+.home-slider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.home-toggle-switch input:checked + .home-slider::before {
+  transform: translateX(24px);
+}
+
+/* Màu công tắc khi ON */
+
+.home-toggle-switch input:checked + .home-fan-slider {
+  background: #f44336;
+}
+
+.home-toggle-switch input:checked + .home-ac-slider {
+  background: #2196f3;
+}
+
+.home-toggle-switch input:checked + .home-light-slider {
+  background: #ffc107;
+}
+
+
+/* HOME — RESPONSIVE — NAVBAR */
+
+@media (max-width: 900px) {
+  .home-nav-list {
+    gap: 20px;
+  }
+
+  .home-nav-list a {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-nav-list {
+    gap: 12px;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 0;
+  }
+}
+
+
+/* HOME — RESPONSIVE — HOME */
+
+@media (max-width: 900px) {
+  .home-dashboard {
+    flex-direction: column;
+    padding: 14px 12px;
+  }
+
+  .home-charts-section,
+  .home-devices-section {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .home-devices-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .home-devices-header {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-sensor-info {
+    min-width: 88px;
+    max-width: 95px;
+    padding: 12px 8px;
+  }
+
+  .home-sensor-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .home-sensor-value {
+    font-size: 1.3rem;
+  }
+
+  .home-device-card {
+    padding: 12px 14px;
+  }
+
+  .home-devices-section {
+    grid-template-columns: 1fr;
+  }
+}

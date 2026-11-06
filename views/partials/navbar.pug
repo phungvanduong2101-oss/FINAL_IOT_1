@@ -1,0 +1,16 @@
+- const pageClassPrefix = activePage === "data-sensor" ? "sensor-data" : activePage === "gas" ? "home" : activePage;
+nav(class=pageClassPrefix + "-navbar")
+  ul(class=pageClassPrefix + "-nav-list")
+    li(class=[pageClassPrefix + "-nav-item", activePage === "home" ? pageClassPrefix + "-active" : ""])
+      a(href="/") HOME
+
+    li(class=[pageClassPrefix + "-nav-item", activePage === "data-sensor" ? pageClassPrefix + "-active" : ""])
+      a(href="/data-sensor") DATA SENSOR
+
+    li(class=[pageClassPrefix + "-nav-item", activePage === "history-action" ? pageClassPrefix + "-active" : ""])
+      a(href="/history-action") HISTORY ACTION
+
+    li(class=[pageClassPrefix + "-nav-item", activePage === "profile" ? pageClassPrefix + "-active" : ""])
+      a(href="/profile") PROFILE
+    li(class=[pageClassPrefix + "-nav-item", activePage === "gas" ? pageClassPrefix + "-active" : ""])
+      a(href="/gas-dashboard") GAS ALERTS

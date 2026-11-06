@@ -1,0 +1,81 @@
+extends layouts/default.pug
+
+include partials/icons.pug
+
+block styles
+  link(rel="stylesheet" href="/css/history-action.css")
+
+block content
+  .history-action-page
+    .history-action-toolbar
+      .history-action-search-wrap
+        input#ha-search(
+          type="text"
+          placeholder="Search by Time"
+          autocomplete="off"
+        )
+        +searchIcon("history-action-search-icon")
+
+      .history-action-filters
+        .history-action-filter-group(style="visibility: none;")
+          label(for="ha-device") Device
+
+          select#ha-device.history-action-select
+            option(value="ALL") ALL
+            option(value="1") Quạt
+            option(value="3") Đèn
+            option(value="2") Điều hòa
+
+        //.history-action-filter-group
+          label(for="ha-action") Action
+
+          select#ha-action.history-action-select
+            option(value="ALL") ALL
+            option(value="ON") ON
+            option(value="OFF") OFF
+
+        .history-action-filter-group
+          label(for="ha-status") Status
+
+          select#ha-status.history-action-select
+            option(value="ALL") ALL
+            option(value="SUCCESS") SUCCESS
+            option(value="FAILED") FAILED
+            option(value="TIMEOUT") TIMEOUT
+
+        .history-action-filter-group
+          label(for="ha-sort") Sort
+
+          select#ha-sort.history-action-select
+            option(value="DESC") Newest
+            option(value="ASC") Oldest  
+
+        .history-action-filter-group
+          label(for="ha-items") Items
+
+          select#ha-items.history-action-select
+            option(value="10") 10
+            option(value="20") 20
+            option(value="50") 50
+         
+        button#ha-reset.history-action-reset-btn(type="button") Đặt lại
+
+    .history-action-table-wrap
+      table.history-action-table
+        thead
+          tr
+            th Device ID
+            th Device Name
+            th Action
+            th Status
+            th Time
+
+        tbody#ha-table-body
+          tr
+            td(colspan="5") Đang tải dữ liệu...
+    .history-action-table-footer
+      #ha-summary.history-action-summary Hiển thị 0–0 trên tổng 0 bản ghi
+      #ha-pagination.history-action-pagination
+
+block scripts
+  script(src="/js/history-action.js")

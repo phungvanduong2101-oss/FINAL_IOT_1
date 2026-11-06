@@ -1,0 +1,468 @@
+/* HISTORY-ACTION — RESET & BASE */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  min-height: 100vh;
+}
+
+
+/* HISTORY-ACTION — NAVBAR */
+
+.history-action-navbar {
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.history-action-nav-list {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  gap: 48px;
+}
+
+.history-action-nav-item a {
+  text-decoration: none;
+  color: #555;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding-bottom: 4px;
+  transition: color 0.2s;
+}
+
+.history-action-nav-item a:hover {
+  color: #333;
+}
+
+.history-action-nav-item.history-action-active a {
+  color: #111;
+  border-bottom: 2.5px solid #111;
+  font-weight: 700;
+}
+
+
+/* HISTORY-ACTION — PAGINATION BUTTONS */
+
+.history-action-pg-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-action-pg-btn:hover:not(:disabled):not(.history-action-pg-dots) {
+  background: #f0f4ff;
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+.history-action-pg-btn.history-action-active {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+  cursor: default;
+}
+
+.history-action-pg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.history-action-pg-dots {
+  border: none;
+  background: transparent;
+  cursor: default;
+  letter-spacing: 1px;
+}
+
+
+/* HISTORY-ACTION — PAGE LAYOUT */
+
+.history-action-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+
+/* HISTORY-ACTION — SEARCH & FILTERS */
+
+.history-action-toolbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Ô tìm kiếm */
+
+.history-action-search-wrap {
+  flex: 0 1 260px;
+  position: relative;
+  align-self: center;
+}
+
+.history-action-search-wrap svg.history-action-search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #aaa;
+  pointer-events: none;
+}
+
+#ha-search {
+  width: 100%;
+  padding: 9px 34px 9px 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #fff;
+}
+
+#ha-search::placeholder {
+  color: #aaa;
+}
+
+#ha-search:focus {
+  border-color: #2196f3;
+}
+
+/* Bộ lọc */
+
+.history-action-filters {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px 16px;
+  max-width: 600px;
+}
+
+.history-action-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.history-action-filter-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #444;
+  min-width: 44px;
+  text-align: right;
+}
+
+.history-action-select {
+  flex: 1;
+  padding: 8px 28px 8px 10px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  color: #333;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 9px center;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 90px;
+}
+
+.history-action-select:focus {
+  border-color: #2196f3;
+}
+
+
+/* HISTORY-ACTION — RESET BUTTON */
+
+.history-action-reset-btn {
+  padding: 8px 16px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  align-self: center;
+}
+
+.history-action-reset-btn:hover {
+  background: #f0f4ff;
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+/* HISTORY-ACTION — TABLE */
+
+.history-action-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.09);
+}
+
+.history-action-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  background: #fff;
+  min-width: 580px;
+}
+
+/* Tiêu đề bảng */
+
+.history-action-table thead tr {
+  background: #1a2238;
+}
+
+.history-action-table thead th {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+  padding: 14px 18px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.history-action-table thead th:first-child,
+.history-action-table thead th:nth-child(3),
+.history-action-table thead th:nth-child(4),
+.history-action-table thead th:nth-child(5) {
+  text-align: center;
+}
+
+/* Các hàng dữ liệu */
+
+.history-action-table tbody tr {
+  border-bottom: 1px solid #e8e8e8;
+  transition: background 0.15s;
+}
+
+.history-action-table tbody tr:nth-child(even) {
+  background: #f7f8fa;
+}
+
+.history-action-table tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+.history-action-table tbody tr:hover {
+  background: #eef4ff;
+}
+
+.history-action-table tbody td {
+  padding: 13px 18px;
+  color: #333;
+}
+
+/* Các cột */
+
+.history-action-table td.history-action-col-id {
+  text-align: center;
+  font-weight: 700;
+}
+
+.history-action-table td.history-action-col-name {
+  text-align: left;
+  font-weight: 700;
+}
+
+.history-action-table td.history-action-col-action,
+.history-action-table td.history-action-col-status {
+  text-align: center;
+  font-weight: 700;
+}
+
+.history-action-table td.history-action-col-time {
+  text-align: center;
+  font-size: 0.87rem;
+  color: #555;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Màu hành động */
+
+.history-action-table td.history-action-action-on {
+  color: #0099ff;
+  font-weight: 700;
+}
+
+.history-action-table td.history-action-action-off {
+  color: #ff0000;
+  font-weight: 700;
+}
+
+/* Màu trạng thái */
+
+.history-action-table td.history-action-status-success {
+  color: #4cd137;
+  font-weight: 700;
+}
+
+.history-action-table td.history-action-status-failed {
+  color: #ff0000;
+  font-weight: 700;
+}
+
+.history-action-table td.history-action-status-timeout {
+  color: #ffb800;
+  font-weight: 700;
+}   
+.history-action-table td.history-action-status-waiting {
+  color: #ffb800;
+  font-weight: 700;
+}
+
+/* Bảng không có dữ liệu */
+
+.history-action-table .history-action-empty td {
+  text-align: center;
+  color: #999;
+  padding: 36px;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+
+/* HISTORY-ACTION — FOOTER & PAGINATION */
+
+.history-action-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.history-action-summary {
+  font-size: 14px;
+  color: #666;
+}
+
+.history-action-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.history-action-table-footer .history-action-pagination {
+  margin-top: 0;
+}
+
+.history-action-pagination .history-action-pg-btn.history-action-active:disabled {
+  background: #1a2238;
+  border-color: #1a2238;
+  color: #fff;
+  opacity: 1;
+  cursor: default;
+}
+
+
+/* HISTORY-ACTION — RESPONSIVE — NAVBAR */
+
+@media (max-width: 900px) {
+  .history-action-nav-list {
+    gap: 20px;
+  }
+
+  .history-action-nav-list a {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .history-action-nav-list {
+    gap: 12px;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 0;
+  }
+}
+
+
+/* HISTORY-ACTION — RESPONSIVE — HISTORY ACTION */
+
+@media (max-width: 800px) {
+  .history-action-toolbar {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .history-action-search-wrap {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .history-action-filters {
+    width: 100%;
+  }
+
+  .history-action-pagination {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .history-action-table-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .history-action-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .history-action-filter-group label {
+    min-width: 54px;
+  }
+}

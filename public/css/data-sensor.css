@@ -1,0 +1,422 @@
+/* SENSOR-DATA — RESET & BASE */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  min-height: 100vh;
+}
+
+
+/* SENSOR-DATA — NAVBAR */
+
+.sensor-data-navbar {
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.sensor-data-nav-list {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  gap: 48px;
+}
+
+.sensor-data-nav-item a {
+  text-decoration: none;
+  color: #555;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding-bottom: 4px;
+  transition: color 0.2s;
+}
+
+.sensor-data-nav-item a:hover {
+  color: #333;
+}
+
+.sensor-data-nav-item.sensor-data-active a {
+  color: #111;
+  border-bottom: 2.5px solid #111;
+  font-weight: 700;
+}
+
+
+/* SENSOR-DATA — PAGINATION BUTTONS */
+
+.sensor-data-pg-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sensor-data-pg-btn:hover:not(:disabled):not(.sensor-data-pg-dots) {
+  background: #f0f4ff;
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+.sensor-data-pg-btn.sensor-data-active {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+  cursor: default;
+}
+
+.sensor-data-pg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sensor-data-pg-dots {
+  border: none;
+  background: transparent;
+  cursor: default;
+  letter-spacing: 1px;
+}
+
+
+/* SENSOR-DATA — PAGE LAYOUT */
+
+.sensor-data-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+
+/* SENSOR-DATA — SEARCH & FILTERS */
+
+.sensor-data-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Ô tìm kiếm */
+
+.sensor-data-search-wrap {
+  position: relative;
+  flex: 1 1 200px;
+  max-width: 280px;
+  margin-right: 200px;
+}
+
+.sensor-data-search-wrap svg.sensor-data-search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #aaa;
+  pointer-events: none;
+}
+
+#ds-search {
+  width: 100%;
+  padding: 8px 34px 8px 12px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#ds-search::placeholder {
+  color: #aaa;
+}
+
+#ds-search:focus {
+  border-color: #2196f3;
+}
+
+/* Bộ lọc */
+
+.sensor-data-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.sensor-data-filter-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.sensor-data-select {
+  padding: 8px 30px 8px 10px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  color: #333;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E") no-repeat right 10px center;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 90px;
+}
+
+.sensor-data-select:focus {
+  border-color: #2196f3;
+}
+
+/* Nút đặt lại */
+
+.sensor-data-reset-btn {
+  padding: 8px 16px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  align-self: center;
+}
+
+.sensor-data-reset-btn:hover {
+  background: #f0f4ff;
+  border-color: #2196f3;
+  color: #2196f3;
+}
+
+
+/* SENSOR-DATA — TABLE */
+
+.sensor-data-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.09);
+}
+
+.sensor-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  background: #fff;
+  min-width: 560px;
+}
+
+/* Tiêu đề bảng */
+
+.sensor-data-table thead tr {
+  background: #1a2238;
+}
+
+.sensor-data-table thead th {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.05em;
+  padding: 14px 18px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Các hàng dữ liệu */
+
+.sensor-data-table tbody tr {
+  border-bottom: 1px solid #e8e8e8;
+  transition: background 0.15s;
+}
+
+.sensor-data-table tbody tr:nth-child(even) {
+  background: #f7f8fa;
+}
+
+.sensor-data-table tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+.sensor-data-table tbody tr:hover {
+  background: #eef4ff;
+}
+
+.sensor-data-table tbody td {
+  padding: 13px 18px;
+  text-align: center;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Cột thời gian */
+
+.sensor-data-table td.sensor-data-col-time {
+  text-align: center;
+  color: #555;
+  font-size: 0.87rem;
+  white-space: nowrap;
+}
+
+/* Màu loại cảm biến và giá trị */
+
+.sensor-data-table td.sensor-data-type-temp,
+.sensor-data-table td.sensor-data-val-temp {
+  color: #ff0000;
+  font-weight: 700;
+}
+
+.sensor-data-table td.sensor-data-type-hum,
+.sensor-data-table td.sensor-data-val-hum {
+  color: #0099ff;
+  font-weight: 700;
+}
+
+.sensor-data-table td.sensor-data-type-lux {
+  color: #f4b400;
+  font-weight: 700;
+}
+
+.sensor-data-table td.sensor-data-val-lux {
+  color: #ffb800;
+  font-weight: 700;
+}
+
+/* Bảng không có dữ liệu */
+
+.sensor-data-table .sensor-data-empty-row td {
+  text-align: center;
+  color: #999;
+  padding: 32px;
+  font-size: 0.95rem;
+}
+
+
+/* SENSOR-DATA — FOOTER & PAGINATION */
+
+.sensor-data-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.sensor-data-summary {
+  font-size: 14px;
+  color: #666;
+}
+
+.sensor-data-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.sensor-data-table-footer .sensor-data-pagination {
+  margin-top: 0;
+}
+
+.sensor-data-table td.sensor-data-type-n2,
+.sensor-data-table td.sensor-data-val-n2 {
+  color: #8e44ad;
+  font-weight: 700;
+}
+
+.sensor-data-table td.sensor-data-type-co2,
+.sensor-data-table td.sensor-data-val-co2 {
+  color: #2980b9;
+  font-weight: 700;
+}
+
+.sensor-data-table td.sensor-data-type-ch4,
+.sensor-data-table td.sensor-data-val-ch4 {
+  color: #e67e22;
+  font-weight: 700;
+}
+/* SENSOR-DATA — RESPONSIVE — NAVBAR */
+
+@media (max-width: 900px) {
+  .sensor-data-nav-list {
+    gap: 20px;
+  }
+
+  .sensor-data-nav-list a {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .sensor-data-nav-list {
+    gap: 12px;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 0;
+  }
+}
+
+
+/* SENSOR-DATA — RESPONSIVE — SENSOR DATA */
+
+@media (max-width: 700px) {
+  .sensor-data-toolbar {
+    gap: 10px;
+  }
+
+  .sensor-data-search-wrap {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .sensor-data-filter-group {
+    flex: 1 1 auto;
+  }
+
+  .sensor-data-pagination {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .sensor-data-table-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

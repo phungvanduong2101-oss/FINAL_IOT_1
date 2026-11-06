@@ -1,0 +1,68 @@
+extends layouts/default.pug
+
+include partials/icons.pug
+
+block styles
+  link(rel="stylesheet" href="/css/profile.css")
+
+block content
+  main.profile-page
+    .profile-card
+      .profile-avatar-wrap
+        img.profile-avatar(
+          src="/assets/images/B23DCCN226.png"
+          alt="Avatar của Phùng Văn Dương"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        )
+
+        .profile-avatar-fallback(style="display:none;")
+          +avatarIcon()
+
+      h1.profile-name Phùng Văn Dương
+      p.profile-id B23DCCN226
+
+      hr.profile-divider
+
+      ul.profile-links
+        li.profile-link-item 
+          strong
+           span.profile-link-label GitHub:
+
+          a.profile-link-url(
+            href="https://github.com/phungvanduong2101-oss/Final-IOT"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="https://github.com/phungvanduong2101-oss"
+          ) https://github.com/phungvan...
+
+        li.profile-link-item 
+          strong
+           span.profile-link-label Figma:
+
+          a.profile-link-url(
+            href="https://www.figma.com/design/jrw81GSXqe7HCQnKSQzYqP/Untitled?node-id=0-1&p=f&t=vO49yfOutI2BrphP-0"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="https://www.figma.com/design/"
+          ) https://www.figma.com/design/...
+
+        li.profile-link-item 
+          strong 
+           span.profile-link-label API docs:
+
+          a.profile-link-url(
+            href="http://localhost:3000/api-docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="API DOC"
+          ) https://phungvanduong2101-oss.github.i.... 
+        li.profile-link-item 
+          strong
+           span.profile-link-label PDF báo cáo:
+
+          a.profile-link-url(
+            href="https://drive.google.com/file/d/1n4NwkC0Ti_rlDXTGSSiNSN-dawvQjpUo/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="PDF mô tả dự án"
+          ) https://drive.google.c... 

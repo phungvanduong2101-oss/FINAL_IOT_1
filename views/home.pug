@@ -1,0 +1,89 @@
+extends layouts/default.pug
+
+include partials/icons.pug
+
+block styles
+  link(rel="stylesheet" href="/css/home.css")
+
+block content
+  p#dashboard-message(role="status" aria-live="polite")
+  main.home-dashboard
+    section.home-charts-section
+      .home-sensor-card
+        .home-sensor-info.home-temp-info
+          .home-sensor-label Nhiệt độ
+
+          .home-sensor-icon
+            +temperatureIcon()
+
+          #temp-value.home-sensor-value --°C
+
+        .home-chart-wrapper
+          canvas#tempChart
+
+      .home-sensor-card
+        .home-sensor-info.home-humid-info
+          .home-sensor-label Độ ẩm
+
+          .home-sensor-icon
+            +humidityIcon()
+
+          #humid-value.home-sensor-value.home-humid-val --%
+
+        .home-chart-wrapper
+          canvas#humidChart
+
+      .home-sensor-card
+        .home-sensor-info.home-light-info
+          .home-sensor-label Ánh sáng
+
+          .home-sensor-icon
+            +sunlightIcon()
+
+          #light-value.home-sensor-value.home-light-val -- LX
+
+        .home-chart-wrapper
+          canvas#lightChart
+
+    aside.home-devices-section
+      .home-devices-header
+        span.home-gear-icon ⚙️
+        span Device controls
+
+      #device-fan.home-device-card
+        .home-device-icon-wrap
+          +fanIcon()
+
+        .home-device-info
+          span.home-device-name Quạt
+
+          label.home-toggle-switch
+            input#fan-toggle(type="checkbox" disabled)
+            span.home-slider.home-fan-slider
+
+      #device-ac.home-device-card
+        .home-device-icon-wrap
+          +acIcon()
+
+        .home-device-info
+          span.home-device-name Điều hòa
+
+          label.home-toggle-switch
+            input#ac-toggle(type="checkbox" disabled)
+            span.home-slider.home-ac-slider
+
+      #device-light.home-device-card
+        .home-device-icon-wrap
+          +bulbIcon()
+
+        .home-device-info
+          span.home-device-name Đèn
+
+          label.home-toggle-switch
+            input#light-toggle(type="checkbox" disabled)
+            span.home-slider.home-light-slider
+
+block scripts
+  script(src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js") 
+  script(src="/socket.io/socket.io.js")
+  script(src="/js/home.js")

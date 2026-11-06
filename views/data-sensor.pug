@@ -1,0 +1,68 @@
+extends layouts/default.pug
+
+include partials/icons.pug
+
+block styles
+  link(rel="stylesheet" href="/css/data-sensor.css")
+
+block content
+  .sensor-data-page
+    .sensor-data-toolbar
+      .sensor-data-search-wrap(style="max-width:360px;")
+        input#ds-search(
+          type="text"
+          placeholder="Search..."
+          autocomplete="off"
+        )
+        +searchIcon("sensor-data-search-icon")
+
+      .sensor-data-filter-group
+        label(for="ds-search-by") Search by
+
+        select#ds-search-by.sensor-data-select
+          option(value="ALL") ALL
+          option(value="Temperature") Temperature
+          option(value="Humidity") Humidity
+          option(value="Light") Light 
+          option(value="N2") N2
+          option(value="CO2") CO2
+          option(value="CH4") CH4
+          option(value="Time") Time
+
+      .sensor-data-filter-group
+        label(for="ds-sort") Sort
+
+        select#ds-sort.sensor-data-select
+          option(value="DESC") Newest
+          option(value="ASC") Oldest  
+
+      .sensor-data-filter-group
+        label(for="ds-limit") Items
+        select#ds-items.sensor-data-select
+          option(value="10") 10
+          option(value="20") 20 
+          option(value="50") 50
+
+
+      button#ds-reset.sensor-data-reset-btn(type="button") Đặt lại
+
+    .sensor-data-table-wrap
+      table.sensor-data-table
+        thead
+          tr
+            th SENSOR ID
+            th SENSOR
+            th Type
+            th Value
+            th Time
+
+        tbody#ds-table-body
+          tr
+            td(colspan="5") Đang tải dữ liệu...
+
+    .sensor-data-table-footer
+      #ds-summary.sensor-data-summary Hiển thị 0–0 trên tổng 0 bản ghi
+      #ds-pagination.sensor-data-pagination
+
+block scripts
+  script(src="/js/data-sensor.js")

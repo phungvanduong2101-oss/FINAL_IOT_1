@@ -1,0 +1,305 @@
+const express = require("express");
+const router = express.Router();
+
+const deviceController = require("../controllers/device.controller");
+const sensorController = require("../controllers/sensor.controller");
+const actionHistoryController = require("../controllers/action.controller");
+
+/**
+ * @openapi
+ * /api/sensors-data/latest:
+ *   get:
+ *     summary: Lấy 10 bản ghi mới nhất của mỗi loại cảm biến
+ *     tags: [Sensors]
+ *     responses:
+ *       '200':
+ *         description: Lấy dữ liệu thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               code: success
+ *               Temperature:
+ *                 - id: 301
+ *                   sensor_id: 1
+ *                   measurement_type: Temperature
+ *                   value: 30.5
+ *                   created_at: "2026-10-27T03:00:00.000Z"
+ *               Humidity:
+ *                 - id: 302
+ *                   sensor_id: 2
+ *                   measurement_type: Humidity
+ *                   value: 65.2
+ *                   created_at: "2026-10-27T03:00:00.000Z"
+ *               Light:
+ *                 - id: 303
+ *                   sensor_id: 3
+ *                   measurement_type: Light
+ *                   value: 450
+ *                   created_at: "2026-10-27T03:00:00.000Z"
+ *       '500':
+ *         description: Lỗi máy chủ
+ */
+router.get(
+  "/sensors-data/latest",
+  sensorController.getSensorsDataLatest
+);
+
+/**
+ * @openapi
+ * /api/devices/status:
+ *   get:
+ *     summary: Lấy danh sách thiết bị và trạng thái hiện tại
+ *     tags: [Devices]
+ *     responses:
+ *       '200':
+ *         description: Lấy danh sách thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               code: success
+ *               data:
+ *                 - id: 1
+ *                   name: Quạt
+ *                   current_status: "ON"
+ *                 - id: 2
+ *                   name: Điều hòa
+ *                   current_status: "OFF"
+ *                 - id: 3
+ *                   name: Đèn
+ *                   current_status: "OFF"
+ *       '500':
+ *         description: Lỗi máy chủ
+ */
+router.get("/devices/status", deviceController.getDevicesStatus);
+
+/**
+ * @openapi
+ * /api/devices/{id}/control:
+ *   post:
+ *     summary: Gửi lệnh bật hoặc tắt thiết bị
+ *     tags: [Devices]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID thiết bị cần điều khiển
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [action]
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: ["ON", "OFF"]
+ *           example:
+ *             action: "ON"
+ *     responses:
+ *       '200':
+ *         description: Đã gửi lệnh, đang chờ thiết bị phản hồi
+ *         content:
+ *           application/json:
+ *             example:
+ *               code: success
+ *       '400':
+ *         description: Lệnh phải là ON hoặc OFF
+ *       '404':
+ *         description: Không tìm thấy thiết bị
+ *       '500':
+ *         description: Lỗi máy chủ hoặc gửi lệnh MQTT thất bại
+ *       '503':
+ *         description: MQTT chưa kết nối
+ */
+router.post("/devices/:id/control", deviceController.controlDevice);
+
+/**
+ * @openapi
+ * /api/sensors-data:
+ *   get:
+ *     summary: Tìm kiếm và phân trang dữ liệu cảm biến
+ *     tags: [Sensors]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         description: Từ khóa tìm kiếm
+ *         schema:
+ *           type: string
+ *           default: ""
+ *       - in: query
+ *         name: searchBy
+ *         description: Chọn loại cảm biến hoặc tìm theo thời gian
+ *         schema:
+ *           type: string
+ *           enum: [ALL, Temperature, Humidity, Light, Time]
+ *           default: ALL
+ *       - in: query
+ *         name: page
+ *         description: Trang hiện tại
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: items
+ *         description: Số bản ghi mỗi trang
+ *         schema:
+ *           type: integer
+ *           enum: [10, 20, 50]
+ *           default: 10
+ *       - in: query
+ *         name: sort
+ *         description: Sắp xếp theo thời gian
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *     responses:
+ *       '200':
+ *         description: Lấy dữ liệu thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               code: success
+ *               data:
+ *                 - id: 301
+ *                   sensor_id: 1
+ *                   measurement_type: Temperature
+ *                   value: 30.5
+ *                   created_at: "2026-10-27T03:00:00.000Z"
+ *                   sensor:
+ *                     id: 1
+ *                     type: Temperature
+ *                     name: Cảm biến nhiệt độ
+ *               currentPage: 1
+ *               totalPages: 1
+ *               totalItems: 1
+ *               skip: 0
+ *       '500':
+ *         description: Lỗi máy chủ
+ */
+router.get("/sensors-data", sensorController.getSensorsData);
+
+/**
+ * @openapi
+ * /api/actions-history:
+ *   get:
+ *     summary: Tìm kiếm và phân trang lịch sử điều khiển
+ *     tags: [Actions]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         description: Tìm theo tên thiết bị, lệnh, trạng thái hoặc thời gian
+ *         schema:
+ *           type: string
+ *           default: ""
+ *       - in: query
+ *         name: device
+ *         description: Nhập ALL hoặc ID thiết bị
+ *         schema:
+ *           type: string
+ *           default: ALL
+ *       - in: query
+ *         name: status
+ *         description: Lọc theo trạng thái thao tác
+ *         schema:
+ *           type: string
+ *           enum: [ALL, SUCCESS, FAILED, TIMEOUT]
+ *           default: ALL
+ *       - in: query
+ *         name: page
+ *         description: Trang hiện tại
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: items
+ *         description: Số bản ghi mỗi trang
+ *         schema:
+ *           type: integer
+ *           enum: [10, 20, 50]
+ *           default: 10
+ *       - in: query
+ *         name: sort
+ *         description: Sắp xếp theo thời gian
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *     responses:
+ *       '200':
+ *         description: Lấy lịch sử thành công
+ *         content:
+ *           application/json:
+ *             example:
+ *               code: success
+ *               data:
+ *                 - id: 123
+ *                   device_id: 1
+ *                   action: "ON"
+ *                   status: SUCCESS
+ *                   created_at: "2026-10-27T03:00:00.000Z"
+ *                   device:
+ *                     id: 1
+ *                     name: Quạt
+ *               totalPages: 1
+ *               currentPage: 1
+ *               total: 1
+ *               skip: 0
+ *       '500':
+ *         description: Không tải được lịch sử thao tác
+ */
+router.get(
+  "/actions-history",
+  actionHistoryController.getActionsHistory
+);
+
+router.get("/gas-dashboard", async (req, res) => {
+  try {
+    const service = require("../services/alert.service");
+    const data = await service.snapshot();
+
+    res.json({
+      code: "success",
+      data,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: e.message,
+    });
+  }
+});
+
+router.get("/alerts/daily", async (req, res) => {
+  const service = require("../services/alert.service");
+
+  // Kiểm tra ngày hợp lệ.
+  try {
+    service.dayRange(req.query.date);
+  } catch (e) {
+    return res.status(400).json({
+      message: e.message,
+    });
+  }
+
+  // Lấy số lần cảnh báo trong ngày.
+  try {
+    const data = await service.dailyCounts(req.query.date);
+
+    res.json({
+      code: "success",
+      date: req.query.date,
+      data,
+    });
+  } catch (e) {
+    res.status(500).json({
+      message: "Không tải được thống kê cảnh báo.",
+    });
+  }
+});
+module.exports = router;
