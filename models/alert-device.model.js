@@ -24,12 +24,6 @@ const AlertDevice = db.define("AlertDevice", {
     unique: true
   },
 
-  status: {
-    type: DataTypes.STRING(10),
-    allowNull: false,
-    defaultValue: "normal"
-  },
-
   is_blinking: {
     type: DataTypes.BOOLEAN,
     allowNull: false,

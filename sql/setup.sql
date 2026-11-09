@@ -75,7 +75,6 @@ CREATE TABLE IF NOT EXISTS `project_iot_3`.`alert_device` (
   `sensor_id` INT NOT NULL,
   `name` VARCHAR(100) NOT NULL,
   `sensor_type` VARCHAR(10) NOT NULL,
-  `status` VARCHAR(10) NOT NULL DEFAULT 'normal',
   `is_blinking` TINYINT(1) NOT NULL DEFAULT '0',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

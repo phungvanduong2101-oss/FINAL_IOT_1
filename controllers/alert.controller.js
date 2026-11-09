@@ -32,7 +32,7 @@ async function snapshot() {
         threshold: ALERT_THRESHOLDS[sensor],
         unit: UNITS[sensor],
         isBlinking: d.is_blinking,
-        status: d.status,
+        status: d.is_blinking ? "alert" : "normal",
 
         totalAlerts: await History.count({
           where: {

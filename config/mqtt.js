@@ -113,7 +113,6 @@ async function handleSensorData(data) {
 
       await AlertDevice.update(
         {
-          status,
           is_blinking: isBlinking,
           updated_at: now,
         },
