@@ -15,9 +15,38 @@
   let currentPage = 1;
   let requestController;
 
+  const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "numeric",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+
+  function formatTime(value) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    const parts = {};
+
+    for (const part of dateFormatter.formatToParts(date)) {
+      parts[part.type] = part.value;
+    }
+
+    return (
+      `${Number(parts.day)}/${parts.month}/${parts.year} ` +
+      `${parts.hour}:${parts.minute}:${parts.second}`
+    );
+  }
+
   async function loadActions() {
-    // Hủy request cũ để kết quả tìm kiếm cũ không ghi đè kết quả mới.
+    // Hủy request cũ khi có yêu cầu mới.
     requestController?.abort();
+
     const controller = new AbortController();
     requestController = controller;
 
@@ -37,11 +66,13 @@
 
       const result = await response.json();
 
-      if (!response.ok || result.code !== "success") {
-        throw new Error(result.message || "Không tải được lịch sử thao tác.");
-      }
-
       if (controller.signal.aborted) return;
+
+      if (!response.ok || result.code !== "success") {
+        throw new Error(
+          result.message || "Không tải được lịch sử thao tác."
+        );
+      }
 
       tbody.replaceChildren();
 
@@ -53,7 +84,7 @@
         const statusClass = {
           SUCCESS: "history-action-status-success",
           FAILED: "history-action-status-failed",
-          WAITING: "history-action-status-waiting", 
+          WAITING: "history-action-status-waiting",
           TIMEOUT: "history-action-status-timeout",
         }[row.status] || "";
 
@@ -73,11 +104,11 @@
             className: `history-action-col-action ${actionClass}`,
           },
           {
-            text: row.status === "WAITING" ? "WAITING" : row.status,
+            text: row.status,
             className: `history-action-col-status ${statusClass}`,
           },
           {
-            text: new Date(row.created_at).toLocaleString("vi-VN"),
+            text: formatTime(row.created_at),
             className: "history-action-col-time",
           },
         ];
@@ -86,7 +117,10 @@
           const td = document.createElement("td");
 
           td.textContent = cell.text;
-          if (cell.className) td.className = cell.className;
+
+          if (cell.className) {
+            td.className = cell.className;
+          }
 
           tr.append(td);
         }
@@ -94,11 +128,15 @@
         tbody.append(tr);
       }
 
-      const start = result.data.length ? Number(result.skip) + 1 : 0;
-      const end = Number(result.skip) + result.data.length;
+      const skip = Number(result.skip);
+      const start = result.data.length > 0 ? skip + 1 : 0;
+      const end = result.data.length > 0
+        ? skip + result.data.length
+        : 0;
 
       summary.textContent =
-        `Hiển thị ${start} - ${end} trên tổng số ${result.total} bản ghi.`;
+        `Hiển thị ${start} - ${end} ` +
+        `trên tổng số ${result.total} bản ghi.`;
 
       currentPage = Number(result.currentPage);
       renderPagination(currentPage, Number(result.totalPages));
@@ -107,7 +145,7 @@
         showMessage("Không có dữ liệu.");
       }
     } catch (error) {
-      if (error.name === "AbortError") return;
+      if (controller.signal.aborted) return;
 
       showMessage(error.message);
       pagination.replaceChildren();

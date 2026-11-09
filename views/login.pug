@@ -1,0 +1,139 @@
+doctype html
+html(lang="vi")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1")
+    title Đăng nhập IoT
+
+    style.
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: Arial, sans-serif;
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+
+      .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 32px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 24px;
+      }
+
+      .description {
+        margin: 0 0 28px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .field {
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font: inherit;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+      }
+
+      button {
+        width: 100%;
+        margin-top: 6px;
+        padding: 13px;
+        border: none;
+        border-radius: 8px;
+        background: #2563eb;
+        color: white;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #1d4ed8;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      button:focus-visible {
+        outline: 3px solid #93c5fd;
+        outline-offset: 3px;
+      }
+
+      #message {
+        margin: 16px 0 0;
+        color: #dc2626;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      #message:empty {
+        display: none;
+      }
+
+  body
+    main.login-card
+      h1 Đăng nhập IoT
+      p.description Đăng nhập để giám sát và điều khiển thiết bị.
+
+      form#login-form
+        .field
+          label(for="username") Tài khoản
+          input#username(
+            name="username"
+            placeholder="Nhập tài khoản"
+            autocomplete="username"
+            required
+          )
+
+        .field
+          label(for="password") Mật khẩu
+          input#password(
+            name="password"
+            type="password"
+            placeholder="Nhập mật khẩu"
+            autocomplete="current-password"
+            required
+          )
+
+        button(type="submit") Đăng nhập
+
+      p#message(role="alert")
+
+    script(src="/js/login.js")

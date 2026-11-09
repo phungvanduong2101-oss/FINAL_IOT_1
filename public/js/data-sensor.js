@@ -9,9 +9,59 @@
   const tbody = document.getElementById("ds-table-body");
   const dsSummary = document.getElementById("ds-summary");
   const dsPagination = document.getElementById("ds-pagination");
+
   let keyword = "";
   let currentPage = 1;
+  let requestId = 0;
+
+  const sensorConfig = {
+    Temperature: { suffix: " °C", color: "temp" },
+    Humidity: { suffix: " %", color: "hum" },
+    Light: { suffix: " Lux", color: "lux" },
+    N2: { suffix: " %", color: "n2" },
+    CO2: { suffix: " ppm", color: "co2" },
+    CH4: { suffix: " ppm", color: "ch4" },
+  };
+
+  // Khớp backend: %e/%m/%Y %H:%i:%s
+  // Ví dụ: 8/11/2026 15:38:02
+  const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "numeric",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+
+  function formatTime(value) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    const parts = {};
+
+    for (const part of dateFormatter.formatToParts(date)) {
+      parts[part.type] = part.value;
+    }
+
+    return (
+      `${Number(parts.day)}/${parts.month}/${parts.year} ` +
+      `${parts.hour}:${parts.minute}:${parts.second}`
+    );
+  }
+
+  function updatePlaceholder() {
+    search.placeholder = searchBy.value === "Time"
+      ? "Ví dụ: 8/11/2026 15:38"
+      : "Search by " + searchBy.value;
+  }
+
   async function loadSensors() {
+    const thisRequestId = ++requestId;
+
     const params = new URLSearchParams({
       search: keyword,
       searchBy: searchBy.value,
@@ -24,24 +74,17 @@
       const response = await fetch(`/api/sensors-data?${params}`);
       const result = await response.json();
 
+      // Bỏ kết quả cũ nếu đã có yêu cầu mới.
+      if (thisRequestId !== requestId) return;
+
       if (!response.ok || result.code !== "success") {
         throw new Error(result.message || "Không tải được dữ liệu.");
       }
 
-      tbody.replaceChildren(); // Clear table
+      tbody.replaceChildren();
 
       for (const row of result.data) {
         const type = row.measurement_type;
-
-        const sensorConfig = {
-          Temperature: { suffix: " °C", color: "temp" },
-          Humidity: { suffix: " %", color: "hum" },
-          Light: { suffix: " Lux", color: "lux" },
-          N2: { suffix: " %", color: "n2", model: "N2" },
-          CO2: { suffix: " ppm", color: "co2", model: "MH-Z19B" },
-          CH4: { suffix: " ppm", color: "ch4", model: "MQ-4" },
-        };
-
         const config = sensorConfig[type] ?? {
           suffix: "",
           color: "",
@@ -51,7 +94,7 @@
 
         const cells = [
           { text: row.sensor_id },
-          { text: config.model ?? row.sensor?.type ?? "" },
+          { text: row.sensor?.type ?? "" },
           {
             text: type,
             className: config.color
@@ -65,32 +108,49 @@
               : "",
           },
           {
-            text: new Date(row.created_at).toLocaleString("vi-VN", {
-              timeZone: "Asia/Ho_Chi_Minh",
-            }),
+            text: formatTime(row.created_at),
             className: "sensor-data-col-time",
           },
         ];
 
         for (const cell of cells) {
           const td = document.createElement("td");
+
           td.textContent = cell.text;
-          if (cell.className) td.className = cell.className;
+
+          if (cell.className) {
+            td.className = cell.className;
+          }
+
           tr.append(td);
         }
 
         tbody.append(tr);
       }
 
-      dsSummary.textContent = `Hiển thị ${result.skip + 1} - ${result.skip + result.data.length} trên tổng số ${result.totalItems} bản ghi.`;
+      const skip = Number(result.skip);
+      const totalItems = Number(result.totalItems);
+      const firstItem = result.data.length > 0 ? skip + 1 : 0;
+      const lastItem = result.data.length > 0
+        ? skip + result.data.length
+        : 0;
+
+      dsSummary.textContent =
+        `Hiển thị ${firstItem} - ${lastItem} ` +
+        `trên tổng số ${totalItems} bản ghi.`;
 
       currentPage = Number(result.currentPage);
       renderPagination(currentPage, Number(result.totalPages));
+
       if (result.data.length === 0) {
         showMessage("Không có dữ liệu.");
       }
     } catch (error) {
+      if (thisRequestId !== requestId) return;
+
       showMessage(error.message);
+      dsSummary.textContent = "";
+      dsPagination.replaceChildren();
     }
   }
 
@@ -132,7 +192,6 @@
 
     addButton("<", currentPage - 1, currentPage <= 1);
 
-    // Chỉ hiện trang đầu, cuối và các trang gần trang hiện tại.
     const pages = [...new Set([
       1,
       currentPage - 1,
@@ -161,8 +220,8 @@
     currentPage = page;
     loadSensors();
   }
-  search.addEventListener("input", () => {
 
+  search.addEventListener("input", () => {
     keyword = search.value.trim();
     currentPage = 1;
     loadSensors();
@@ -171,8 +230,9 @@
   searchBy.addEventListener("change", () => {
     search.value = "";
     keyword = "";
-    search.placeholder = "Search by " + searchBy.value;
     currentPage = 1;
+
+    updatePlaceholder();
     loadSensors();
   });
 
@@ -191,11 +251,13 @@
     keyword = "";
     searchBy.value = "ALL";
     sort.value = "DESC";
-    items.value = 10;
-    currentPage = 1;   
-    search.placeholder = "Search by ALL";
+    items.value = "10";
+    currentPage = 1;
+
+    updatePlaceholder();
     loadSensors();
   });
 
+  updatePlaceholder();
   loadSensors();
 })();

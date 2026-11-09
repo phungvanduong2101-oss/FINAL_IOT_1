@@ -1,12 +1,14 @@
 extends layouts/default.pug
+include mixins/alert-history-modal.pug
+
 block styles
   link(rel="stylesheet" href="/css/home.css")
   link(rel="stylesheet" href="/css/gas-dashboard.css")
+
 block content
   main.gas-page
-    h1 Giám sát khí mô phỏng
-    p 
-    p#gas-message(role="status") Đang kết nối…
+    p#gas-message(role="status" style="display: none;") 
+
     .gas-grid
       each gas in ['n2', 'co2', 'ch4']
         section.gas-card
@@ -14,19 +16,29 @@ block content
           strong(id=gas+'-value') --
           .gas-chart
             canvas(id=gas+'-chart')
+
       each gas in ['n2', 'co2', 'ch4']
         section.gas-card
           h2= 'LED '+gas.toUpperCase()
           .gas-led(id=gas+'-led')
           p(id=gas+'-status') Chưa có trạng thái
+
       .gas-date-filter
         label(for="alert-date") Thống kê tổng số lượt cảnh báo theo ngày
         input#alert-date(type="date")
+
+        button#alert-detail-open.alert-detail-button(type="button")
+          | Xem chi tiết
+
         p#daily-message(role="status" aria-live="polite")
+
       each gas in ['n2', 'co2', 'ch4']
         section.gas-card
           h2= 'Số lần cảnh báo '+gas.toUpperCase()
           strong.gas-count(id=gas+'-count') --
+
+    +alertHistoryModal()
+
 block scripts
   script(src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js")
   script(src="/socket.io/socket.io.js")

@@ -1,13 +1,22 @@
 "use strict";
 
 (() => {
-  // =========================
-  // BIỂU ĐỒ
-  // =========================
-  const charts = {};
-  const message = document.getElementById("gas-message");
+  // ==========================================
+  // PHẦN 1: DASHBOARD
+  // ==========================================
 
-  for (const gas of ["n2", "co2", "ch4"]) {
+  const gases = ["n2", "co2", "ch4"];
+  const charts = {};
+
+  const message = document.getElementById("gas-message");
+  const dateInput = document.getElementById("alert-date");
+  const dailyMessage = document.getElementById("daily-message");
+
+  // =========================
+  // KHỞI TẠO BIỂU ĐỒ
+  // =========================
+
+  for (const gas of gases) {
     charts[gas] = new Chart(
       document.getElementById(`${gas}-chart`),
       {
@@ -39,13 +48,17 @@
     );
   }
 
-  function update(d, initial = false) {
-    const c = charts[d.sensor];
+  // =========================
+  // CẬP NHẬT BIỂU ĐỒ VÀ LED
+  // =========================
 
-    if (!c) return;
+  function update(d, initial = false) {
+    const chart = charts[d.sensor];
+
+    if (!chart) return;
 
     document.getElementById(`${d.sensor}-value`).textContent =
-      `${d.value ?? "--"} ${d.unit}`;
+      `${d.value ?? "--"} ${d.unit ?? ""}`;
 
     document.getElementById(`${d.sensor}-status`).textContent =
       d.status === "alert" ? "Cảnh báo" : "Bình thường";
@@ -56,64 +69,68 @@
     );
 
     if (initial) {
-      c.data.labels = [];
+      chart.data.labels = [];
 
-      c.data.datasets.forEach(ds => {
-        ds.data = [];
+      chart.data.datasets.forEach(dataset => {
+        dataset.data = [];
       });
     }
 
-    for (const row of (initial ? d.records : [d.record])) {
+    const records = initial ? (d.records ?? []) : [d.record];
+
+    for (const row of records) {
       if (!row) continue;
 
-      c.data.labels.push(
-        new Date(row.created_at).toLocaleTimeString("vi-VN")
+      chart.data.labels.push(
+        new Date(row.created_at).toLocaleTimeString("vi-VN", {
+          timeZone: "Asia/Ho_Chi_Minh",
+          hourCycle: "h23",
+        })
       );
 
-      c.data.datasets[0].data.push(row.value);
-      c.data.datasets[1].data.push(d.threshold);
+      chart.data.datasets[0].data.push(row.value);
+      chart.data.datasets[1].data.push(d.threshold);
 
-      while (c.data.labels.length > 10) {
-        c.data.labels.shift();
+      while (chart.data.labels.length > 5) {
+        chart.data.labels.shift();
 
-        c.data.datasets.forEach(ds => {
-          ds.data.shift();
+        chart.data.datasets.forEach(dataset => {
+          dataset.data.shift();
         });
       }
     }
 
-    c.update();
+    chart.update();
   }
 
   // =========================
   // THỐNG KÊ THEO NGÀY
   // =========================
-  const dateInput = document.getElementById("alert-date");
-  const dailyMessage = document.getElementById("daily-message");
 
-  const today = () =>
-    new Intl.DateTimeFormat("en-CA", {
+  function today() {
+    const parts = {};
+
+    const formatter = new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Ho_Chi_Minh",
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    }).format(new Date());
+    });
+
+    for (const part of formatter.formatToParts(new Date())) {
+      parts[part.type] = part.value;
+    }
+
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
 
   dateInput.value = today();
 
   let countGeneration = 0;
-  let countBusy = false;
-  let countAgain = false;
 
   async function loadCounts() {
     const current = ++countGeneration;
     const day = dateInput.value;
-
-    dailyMessage.textContent = "Đang tải…";
-
-    for (const gas of ["n2", "co2", "ch4"]) {
-      document.getElementById(`${gas}-count`).textContent = "--";
-    }
 
     try {
       const response = await fetch(
@@ -125,82 +142,82 @@
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message);
-      }
-
       if (current !== countGeneration) return;
 
-      for (const d of result.data) {
-        document.getElementById(`${d.sensor}-count`).textContent =
-          d.count;
+      if (!response.ok) {
+        throw new Error(
+          result.message || "Không tải được thống kê."
+        );
       }
 
-      dailyMessage.textContent =
-        "";
-    } catch (e) {
+      const counts = {
+        n2: 0,
+        co2: 0,
+        ch4: 0,
+      };
+
+      for (const item of result.data) {
+        if (item.sensor === "n2") {
+          counts.n2 = item.count;
+        } else if (item.sensor === "co2") {
+          counts.co2 = item.count;
+        } else if (item.sensor === "ch4") {
+          counts.ch4 = item.count;
+        }
+      }
+
+      for (const gas of gases) {
+        document.getElementById(`${gas}-count`).textContent =
+          counts[gas];
+      }
+
+      dailyMessage.textContent = "";
+    } catch (error) {
       if (current === countGeneration) {
-        dailyMessage.textContent = e.message;
+        dailyMessage.textContent = error.message;
       }
     }
-  }
-
-  async function refreshCounts() {
-    if (countBusy) {
-      countAgain = true;
-      return;
-    }
-
-    countBusy = true;
-
-    do {
-      countAgain = false;
-      await loadCounts();
-    } while (countAgain);
-
-    countBusy = false;
   }
 
   dateInput.addEventListener("change", () => {
-    countGeneration++;
-    refreshCounts();
+    dailyMessage.textContent = "";
+
+    for (const gas of gases) {
+      document.getElementById(`${gas}-count`).textContent = "--";
+    }
+
+    loadCounts();
   });
 
-  refreshCounts();
+  loadCounts();
 
   // =========================
-  // SOCKET.IO — CẬP NHẬT REALTIME
+  // SOCKET.IO — REALTIME
   // =========================
+
   const socket = io();
 
   let loading = true;
-  let pending = [];
   let generation = 0;
 
-  socket.on("alert:status", d => {
+  socket.on("alert:history-updated", () => {
     if (dateInput.value === today()) {
-      refreshCounts();
+      loadCounts();
     }
   });
-
   socket.on("alert:status", d => {
-    if (loading) {
-      pending.push(d);
-    } else {
-      update(d);
-    }
+    if (loading) return;
+    update(d);
+    message.textContent = "Đang nhận dữ liệu trực tiếp";
   });
 
-  // =========================
-  // SOCKET.IO — KẾT NỐI
-  // =========================
   socket.on("connect", async () => {
-    refreshCounts();
+    loadCounts();
 
     const current = ++generation;
-
     loading = true;
-    pending = [];
+
+    message.textContent = "Đang tải dữ liệu ban đầu…";
 
     try {
       const response = await fetch("/api/gas-dashboard", {
@@ -209,41 +226,28 @@
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message);
-      }
-
       if (current !== generation) return;
+
+      if (!response.ok || result.code !== "success") {
+        throw new Error(
+          result.message || "Không tải được dashboard."
+        );
+      }
 
       result.data.forEach(d => {
         update(d, true);
       });
 
-      // Snapshot có thể đã chứa sự kiện nhận trong lúc chờ API.
-      const latest = Object.fromEntries(
-        result.data.map(d => [
-          d.sensor,
-          Number(d.records.at(-1)?.id || 0),
-        ])
-      );
+      message.textContent =
+        "Đã tải dữ liệu — đang chờ cập nhật trực tiếp";
+    } catch (error) {
+      if (current !== generation) return;
 
-      for (const d of pending) {
-        if (Number(d.record.id) > latest[d.sensor]) {
-          update(d);
-        }
-      }
-
-      message.textContent = "Đang nhận dữ liệu trực tiếp";
-    } catch (e) {
-      message.textContent = e.message;
-
-      pending.forEach(d => {
-        update(d);
-      });
+      message.textContent =
+        `${error.message} Đang chờ dữ liệu trực tiếp.`;
     } finally {
       if (current === generation) {
         loading = false;
-        pending = [];
       }
     }
   });
@@ -259,4 +263,361 @@
   socket.on("connect_error", () => {
     message.textContent = "Không kết nối được máy chủ.";
   });
+
+  // ==========================================
+  // PHẦN 2: POPUP LỊCH SỬ CẢNH BÁO
+  // ==========================================
+
+  const modal = document.getElementById("alert-detail-modal");
+  const openButton = document.getElementById("alert-detail-open");
+  const closeButton = document.getElementById("alert-detail-close");
+
+  const modalGas = document.getElementById("alert-detail-gas");
+  const modalSearch = document.getElementById("alert-detail-search");
+  const modalRefresh = document.getElementById("alert-detail-refresh");
+  const modalSort = document.getElementById("alert-detail-sort");
+  const modalItems = document.getElementById("alert-detail-items");
+
+  const modalBody = document.getElementById("alert-detail-body");
+  const modalSummary = document.getElementById("alert-detail-summary");
+  const modalPagination = document.getElementById(
+    "alert-detail-pagination"
+  );
+
+  let alertController;
+  let alertPage = 1;
+  let searchTimer;
+
+  // =========================
+  // ĐỊNH DẠNG THỜI GIAN
+  // =========================
+
+  const alertTimeFormatter = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "numeric",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+
+  function formatAlertTime(value) {
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    const parts = {};
+
+    for (const part of alertTimeFormatter.formatToParts(date)) {
+      parts[part.type] = part.value;
+    }
+
+    return (
+      `${Number(parts.day)}/${parts.month}/${parts.year} ` +
+      `${parts.hour}:${parts.minute}:${parts.second}`
+    );
+  }
+
+  // =========================
+  // ĐẶT LẠI BỘ LỌC
+  // =========================
+
+  function setDefaultAlertSearch() {
+    if (!dateInput.value) {
+      modalSearch.value = "";
+      return;
+    }
+
+    const [year, month, day] = dateInput.value.split("-");
+    modalSearch.value = `${Number(day)}/${month}/${year} `;
+  }
+
+  function resetAlertFilters() {
+    alertPage = 1;
+    modalGas.value = "ALL";
+    modalSort.value = "DESC";
+    modalItems.value = "10";
+
+    setDefaultAlertSearch();
+  }
+
+  // =========================
+  // THÔNG BÁO VÀ HỦY REQUEST
+  // =========================
+
+  function showAlertMessage(text) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+
+    td.colSpan = 5;
+    td.className = "alert-detail-empty";
+    td.textContent = text;
+
+    tr.append(td);
+    modalBody.replaceChildren(tr);
+  }
+
+  function cancelAlertRequest() {
+    clearTimeout(searchTimer);
+    alertController?.abort();
+    alertController = null;
+
+    modalBody.removeAttribute("aria-busy");
+  }
+
+  // =========================
+  // PHÂN TRANG
+  // =========================
+
+  function renderAlertPagination(currentPage, totalPages) {
+    const fragment = document.createDocumentFragment();
+
+    function addButton(text, page, disabled = false) {
+      const button = document.createElement("button");
+
+      button.type = "button";
+      button.textContent = text;
+      button.className = "alert-detail-page-button";
+      button.disabled = disabled;
+
+      if (text === "...") {
+        button.classList.add("alert-detail-page-dots");
+      }
+
+      if (text === String(page) && page === currentPage) {
+        button.classList.add("active");
+        button.setAttribute("aria-current", "page");
+      }
+
+      button.addEventListener("click", () => {
+        clearTimeout(searchTimer);
+        alertPage = page;
+        loadAlert();
+      });
+
+      fragment.append(button);
+    }
+
+    if (totalPages > 1) {
+      addButton("<", currentPage - 1, currentPage <= 1);
+
+      const pages = [...new Set([
+        1,
+        currentPage - 1,
+        currentPage,
+        currentPage + 1,
+        totalPages,
+      ])]
+        .filter(page => page >= 1 && page <= totalPages)
+        .sort((a, b) => a - b);
+
+      let previousPage = 0;
+
+      for (const page of pages) {
+        if (previousPage && page - previousPage > 1) {
+          addButton("...", 0, true);
+        }
+
+        addButton(String(page), page);
+        previousPage = page;
+      }
+
+      addButton(
+        ">",
+        currentPage + 1,
+        currentPage >= totalPages
+      );
+    }
+
+    modalPagination.replaceChildren(fragment);
+  }
+
+  // =========================
+  // TẢI LỊCH SỬ
+  // =========================
+
+  async function loadAlert() {
+    alertController?.abort();
+
+    const controller = new AbortController();
+    alertController = controller;
+
+    // Giữ bảng và phân trang cũ trong lúc tải.
+    modalBody.setAttribute("aria-busy", "true");
+
+    const params = new URLSearchParams({
+      search: modalSearch.value.trim(),
+      sensor: modalGas.value,
+      sort: modalSort.value,
+      page: alertPage,
+      items: modalItems.value,
+    });
+
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 10000);
+
+    try {
+      const response = await fetch(
+        `/api/alerts/history?${params}`,
+        {
+          signal: controller.signal,
+        }
+      );
+
+      const result = await response.json();
+
+      if (controller !== alertController || !modal.open) return;
+
+      if (!response.ok || result.code !== "success") {
+        throw new Error(
+          result.message || "Không tải được lịch sử."
+        );
+      }
+
+      const fragment = document.createDocumentFragment();
+
+      for (const row of result.data) {
+        const gas = row.sensor.toUpperCase();
+        const unit = row.sensor === "n2" ? "%" : "ppm";
+        const tr = document.createElement("tr");
+
+        const cells = [
+          gas,
+          `${row.threshold_value} ${unit}`,
+          `${row.peak_value} ${unit}`,
+          formatAlertTime(row.started_at),
+          formatAlertTime(row.ended_at),
+        ];
+
+        cells.forEach((value, index) => {
+          const td = document.createElement("td");
+          td.textContent = value;
+
+          if (index === 2) {
+            td.className = "alert-detail-peak";
+          }
+
+          tr.append(td);
+        });
+
+        fragment.append(tr);
+      }
+
+      if (result.data.length > 0) {
+        modalBody.replaceChildren(fragment);
+      } else {
+        showAlertMessage("Không có dữ liệu.");
+      }
+
+      alertPage = Number(result.currentPage);
+
+      const skip = Number(result.skip);
+      const total = Number(result.total);
+
+      const start = result.data.length > 0
+        ? skip + 1
+        : 0;
+
+      const end = result.data.length > 0
+        ? skip + result.data.length
+        : 0;
+
+      modalSummary.textContent =
+        `Hiển thị ${start}–${end} ` +
+        `trên tổng số ${total} bản ghi.`;
+
+      renderAlertPagination(
+        alertPage,
+        Number(result.totalPages)
+      );
+    } catch (error) {
+      if (controller !== alertController || !modal.open) return;
+
+      // Giữ bảng cũ khi gặp lỗi.
+      modalSummary.textContent = controller.signal.aborted
+        ? "Tải dữ liệu quá thời gian. Vui lòng thử lại."
+        : error.message;
+    } finally {
+      clearTimeout(timeout);
+
+      if (controller === alertController) {
+        modalBody.removeAttribute("aria-busy");
+      }
+    }
+  }
+
+  function reloadAlertFromFirstPage() {
+    clearTimeout(searchTimer);
+    alertPage = 1;
+    loadAlert();
+  }
+
+  // =========================
+  // SỰ KIỆN POPUP
+  // =========================
+
+  if (
+    modal &&
+    openButton &&
+    closeButton &&
+    modalGas &&
+    modalSearch &&
+    modalRefresh &&
+    modalSort &&
+    modalItems &&
+    modalBody &&
+    modalSummary &&
+    modalPagination
+  ) {
+    openButton.addEventListener("click", () => {
+      cancelAlertRequest();
+      resetAlertFilters();
+
+      showAlertMessage("Đang tải lịch sử…");
+      modalSummary.textContent = "";
+      modalPagination.replaceChildren();
+
+      modal.showModal();
+      loadAlert();
+    });
+
+    closeButton.addEventListener("click", () => {
+      modal.close();
+    });
+
+    modal.addEventListener("close", cancelAlertRequest);
+
+    modalSearch.addEventListener("input", () => {
+      cancelAlertRequest();
+      alertPage = 1;
+
+      searchTimer = setTimeout(() => {
+        loadAlert();
+      }, 200);
+    });
+
+    modalGas.addEventListener(
+      "change",
+      reloadAlertFromFirstPage
+    );
+
+    modalSort.addEventListener(
+      "change",
+      reloadAlertFromFirstPage
+    );
+
+    modalItems.addEventListener(
+      "change",
+      reloadAlertFromFirstPage
+    );
+
+    modalRefresh.addEventListener("click", () => {
+      clearTimeout(searchTimer);
+      resetAlertFilters();
+      loadAlert();
+    });
+  }
 })();

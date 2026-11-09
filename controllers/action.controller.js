@@ -1,22 +1,24 @@
-const { Op, Sequelize , where: sqlWhere, fn, col } = require("sequelize");
+const { Op, where: sqlWhere, fn, col } = require("sequelize");
 const ActionHistory = require("../models/action-history.model");
 const Device = require("../models/device.model");
+
 module.exports.getActionsHistory = async (req, res) => {
   try {
     const {
       search = "",
       device = "ALL",
-      status = "ALL", 
-      items = "10", 
+      status = "ALL",
+      items = "10",
       sort = "DESC",
     } = req.query;
 
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
- 
-    const limit = Number(items);
-    const offset = (page - 1) * limit; 
- 
-    const where = {}; 
+    const limit = Math.max(1, parseInt(items, 10) || 10);
+    const offset = (page - 1) * limit;
+    const sortOrder = sort === "ASC" ? "ASC" : "DESC";
+    const keyword = search.trim();
+
+    const where = {};
 
     if (status !== "ALL") {
       where.status = status;
@@ -24,53 +26,74 @@ module.exports.getActionsHistory = async (req, res) => {
 
     if (device !== "ALL") {
       where.device_id = Number(device);
-    } 
+    }
 
-    if(search.trim()) { 
-      where[Op.or] = [  
-        {"$device.name$": { [Op.like]: `%${search.trim()}%` } },
-        {action: {[Op.like]: `%${search.trim()}%`}}, 
-        {status: {[Op.like]: `%${search.trim()}%`}}, 
-        sqlWhere( 
-          fn( 
-            "DATE_FORMAT", 
-            fn("CONVERT_TZ",col("ActionHistory.created_at"),"+00:00","+07:00"), 
-            "%H:%i:%s %d/%m/%Y"
-          ), 
-          { [Op.like]: `%${search.trim()}%` }
-        )
-      ]
-    } 
-    const result = await ActionHistory.findAll({ 
+    if (keyword) {
+      where[Op.or] = [
+        {
+          "$device.name$": {
+            [Op.like]: `%${keyword}%`,
+          },
+        },
+        {
+          action: {
+            [Op.like]: `%${keyword}%`,
+          },
+        },
+        {
+          status: {
+            [Op.like]: `%${keyword}%`,
+          },
+        },
+        sqlWhere(
+          fn(
+            "DATE_FORMAT",
+            fn(
+              "CONVERT_TZ",
+              col("ActionHistory.created_at"),
+              "+00:00",
+              "+07:00"
+            ),
+            "%e/%m/%Y %H:%i:%s"
+          ),
+          { [Op.like]: `%${keyword}%` }
+        ),
+      ];
+    }
+
+    const result = await ActionHistory.findAll({
       where,
       include: [
         {
-          model: Device, 
+          model: Device,
           as: "device",
           attributes: ["id", "name"],
         },
       ],
       limit,
       offset,
-      order: [["created_at", sort]],
-    }) 
- 
-    const total = await ActionHistory.count({ 
-    where, 
-    include : [
-      {
-        model: Device, 
-        as: "device",
-        attributes: ["id", "name"],
-      },
-    ] 
+      order: [
+        ["created_at", sortOrder],
+        ["id", sortOrder],
+      ],
     });
-    const totalPages = Math.ceil(total / limit);
+
+    const total = await ActionHistory.count({
+      where,
+      include: [
+        {
+          model: Device,
+          as: "device",
+          attributes: [],
+        },
+      ],
+    });
+
     return res.json({
       code: "success",
       data: result,
-      totalPages,
-      currentPage: page, 
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
       total,
       skip: offset,
     });

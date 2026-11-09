@@ -2,82 +2,101 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
+#include <time.h>
 
 // =========================
-// LED
+// LED THIẾT BỊ
 // =========================
+
 #define LED_D2 2
 #define LED_D5 5
 #define LED_D23 23
 
 // =========================
-// DHT11
+// CẢM BIẾN
 // =========================
+
 #define DHTPIN 22
 #define DHTTYPE DHT11
+#define LIGHT_PIN 34
 
 DHT dht(DHTPIN, DHTTYPE);
 
 // =========================
-// CẢM BIẾN ÁNH SÁNG
-// A0 -> GPIO34
-// =========================
-#define LIGHT_PIN 34
-
-// =========================
 // WIFI
-// Điền lại thông tin của m
 // =========================
+
 const char* WIFI_SSID = "Phong302";
 const char* WIFI_PASSWORD = "03112005";
 
 // =========================
 // MQTT
 // =========================
+
 const char* MQTT_HOST = "192.168.68.100";
 const int MQTT_PORT = 2711;
 
 const char* MQTT_USERNAME = "PhungVanDuong";
 const char* MQTT_PASSWORD = "B23DCCN226";
 
-// =========================
-// MQTT TOPIC
-// =========================
 const char* MQTT_TOPIC_CONTROL = "device/+/command";
 const char* MQTT_TOPIC_STATUS = "device/status";
 const char* MQTT_TOPIC_SENSOR = "sensors/data";
+const char* MQTT_TOPIC_ALERT = "alerts/history";
 
-// =========================
-// MQTT CLIENT
-// =========================
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 // =========================
-// SENSOR TIMER
+// CHU KỲ ĐỌC CẢM BIẾN
 // =========================
+
 unsigned long lastSensorRead = 0;
 const unsigned long SENSOR_INTERVAL = 2000;
 
-// Gas LEDs are separate from the original device LEDs.
-const uint8_t alertPins[3] = { 18, 19, 21 };
-int alertIds[3] = { 0, 0, 0 };
-bool blinking[3] = { false, false, false }, levels[3] = { false, false, false };
-unsigned long blinkTimes[3] = { 0, 0, 0 };
-float gasN2 = 78;
-int gasCO2 = 850, gasCH4 = 400;
+// =========================
+// LED CẢNH BÁO
+// Chỉ số: N2 = 0, CO2 = 1, CH4 = 2
+// =========================
+
+const uint8_t alertPins[3] = {18, 19, 21};
+
+bool blinking[3] = {false, false, false};
+bool levels[3] = {false, false, false};
+
+unsigned long blinkTimes[3] = {0, 0, 0};
+
+// Thời gian bắt đầu từng đợt
+time_t alertStartTimes[3] = {0, 0, 0};
+
+// Giá trị lớn nhất đo được trong từng đợt
+float peakValues[3] = {0, 0, 0};
+
+// Ngưỡng cảnh báo
+const float alertN2 = 50.0;
+const int alertCO2 = 700;
+const int alertCH4 = 450;
+
+// =========================
+// NHẤP NHÁY LED
+// =========================
+
 void tickAlerts() {
   unsigned long now = millis();
-  for (int i = 0; i < 3; i++)
-    if (blinking[i] && now - blinkTimes[i] >= 500) {
+
+  for (int i = 0; i < 3; i++) {
+    if (blinking[i] && now - blinkTimes[i] >= 270) {
       blinkTimes[i] = now;
       levels[i] = !levels[i];
       digitalWrite(alertPins[i], levels[i]);
     }
+  }
 }
-// =====================================================
+
+// =========================
 // KẾT NỐI WIFI
-// =====================================================
+// =========================
+
 void setupWiFi() {
   Serial.print("Connecting WiFi");
 
@@ -95,15 +114,17 @@ void setupWiFi() {
   Serial.println(WiFi.localIP());
 }
 
-// =====================================================
-// GỬI TRẠNG THÁI THIẾT BỊ + ACTION ID
-// =====================================================
+// =========================
+// GỬI TRẠNG THÁI THIẾT BỊ
+// =========================
+
 void sendStatus(
   int deviceIds[],
   const char* states[],
   const char* statuses[],
   int count,
-  int actionId) {
+  int actionId
+) {
   JsonDocument doc;
 
   doc["action_id"] = actionId;
@@ -127,9 +148,10 @@ void sendStatus(
   Serial.println(buffer);
 }
 
-// =====================================================
-// ĐỌC VÀ GỬI DỮ LIỆU CẢM BIẾN
-// =====================================================
+// =========================
+// ĐỌC VÀ GỬI CẢM BIẾN
+// =========================
+
 void sendSensorData() {
   float temperature = dht.readTemperature();
   float humidity = dht.readHumidity();
@@ -141,51 +163,206 @@ void sendSensorData() {
     return;
   }
 
-  JsonDocument doc;
+  float gasN2 = random(10, 1001) / 10.0f;
+  int gasCO2 = random(1, 1401);
+  int gasCH4 = random(1, 901);
 
+  JsonDocument doc;
   JsonArray sensors = doc["sensorsData"].to<JsonArray>();
+
+  // =========================
+  // DHT11
+  // =========================
 
   JsonObject dhtSensor = sensors.add<JsonObject>();
   dhtSensor["sensor_id"] = 1;
   dhtSensor["temperature"] = temperature;
   dhtSensor["humidity"] = humidity;
 
+  // =========================
+  // ÁNH SÁNG
+  // =========================
+
   JsonObject lightSensor = sensors.add<JsonObject>();
   lightSensor["sensor_id"] = 2;
   lightSensor["light"] = lightValue;
 
-  gasN2 = random(750, 851) / 10.0f;  // 75.0 - 85.0 %
-  gasCO2 = random(600, 1401);         // 600 - 1400 ppm
-  gasCH4 = random(100, 901);          // 100 - 900 ppm
-  doc["n2"] = gasN2;
-  doc["co2"] = gasCO2;
-  doc["ch4"] = gasCH4;
+  // =========================
+  // N2 ẢO
+  // =========================
+
+  JsonObject n2Sensor = sensors.add<JsonObject>();
+  n2Sensor["sensor_id"] = 3;
+
+  if (gasN2 >= alertN2) {
+    if (!blinking[0]) {
+      // Bắt đầu đợt mới
+      alertStartTimes[0] = time(nullptr);
+      peakValues[0] = gasN2;
+    }
+
+    // Cập nhật peak trong đợt
+    if (gasN2 > peakValues[0]) {
+      peakValues[0] = gasN2;
+    }
+
+    blinking[0] = true;
+  } else {
+    if (blinking[0]) {
+      // Kết thúc đợt
+      time_t endedAt = time(nullptr);
+
+      JsonDocument alertDoc;
+      alertDoc["alert_device_id"] = 1;
+      alertDoc["threshold_value"] = alertN2;
+      alertDoc["peak_value"] = peakValues[0];
+      alertDoc["started_at"] = (long long)alertStartTimes[0];
+      alertDoc["ended_at"] = (long long)endedAt;
+
+      char alertBuffer[256];
+      serializeJson(alertDoc, alertBuffer, sizeof(alertBuffer));
+
+      bool sent = mqttClient.publish(MQTT_TOPIC_ALERT, alertBuffer);
+
+      Serial.print(sent ? "N2 alert sent: " : "N2 alert publish failed: ");
+      Serial.println(alertBuffer);
+    }
+
+    blinking[0] = false;
+    levels[0] = false;
+    digitalWrite(alertPins[0], LOW);
+  }
+
+  n2Sensor["n2"] = gasN2;
+
+  // =========================
+  // CO2 ẢO
+  // =========================
+
+  JsonObject co2Sensor = sensors.add<JsonObject>();
+  co2Sensor["sensor_id"] = 4;
+
+  if (gasCO2 >= alertCO2) {
+    if (!blinking[1]) {
+      // Bắt đầu đợt mới
+      alertStartTimes[1] = time(nullptr);
+      peakValues[1] = gasCO2;
+    }
+
+    // Cập nhật peak trong đợt
+    if (gasCO2 > peakValues[1]) {
+      peakValues[1] = gasCO2;
+    }
+
+    blinking[1] = true;
+  } else {
+    if (blinking[1]) {
+      // Kết thúc đợt
+      time_t endedAt = time(nullptr);
+
+      JsonDocument alertDoc;
+      alertDoc["alert_device_id"] = 2;
+      alertDoc["threshold_value"] = alertCO2;
+      alertDoc["peak_value"] = peakValues[1];
+      alertDoc["started_at"] = (long long)alertStartTimes[1];
+      alertDoc["ended_at"] = (long long)endedAt;
+
+      char alertBuffer[256];
+      serializeJson(alertDoc, alertBuffer, sizeof(alertBuffer));
+
+      bool sent = mqttClient.publish(MQTT_TOPIC_ALERT, alertBuffer);
+
+      Serial.print(sent ? "CO2 alert sent: " : "CO2 alert publish failed: ");
+      Serial.println(alertBuffer);
+    }
+
+    blinking[1] = false;
+    levels[1] = false;
+    digitalWrite(alertPins[1], LOW);
+  }
+
+  co2Sensor["co2"] = gasCO2;
+
+  // =========================
+  // CH4 ẢO
+  // =========================
+
+  JsonObject ch4Sensor = sensors.add<JsonObject>();
+  ch4Sensor["sensor_id"] = 5;
+
+  if (gasCH4 >= alertCH4) {
+    if (!blinking[2]) {
+      // Bắt đầu đợt mới
+      alertStartTimes[2] = time(nullptr);
+      peakValues[2] = gasCH4;
+    }
+
+    // Cập nhật peak trong đợt
+    if (gasCH4 > peakValues[2]) {
+      peakValues[2] = gasCH4;
+    }
+
+    blinking[2] = true;
+  } else {
+    if (blinking[2]) {
+      // Kết thúc đợt
+      time_t endedAt = time(nullptr);
+
+      JsonDocument alertDoc;
+      alertDoc["alert_device_id"] = 3;
+      alertDoc["threshold_value"] = alertCH4;
+      alertDoc["peak_value"] = peakValues[2];
+      alertDoc["started_at"] = (long long)alertStartTimes[2];
+      alertDoc["ended_at"] = (long long)endedAt;
+
+      char alertBuffer[256];
+      serializeJson(alertDoc, alertBuffer, sizeof(alertBuffer));
+
+      bool sent = mqttClient.publish(MQTT_TOPIC_ALERT, alertBuffer);
+
+      Serial.print(sent ? "CH4 alert sent: " : "CH4 alert publish failed: ");
+      Serial.println(alertBuffer);
+    }
+
+    blinking[2] = false;
+    levels[2] = false;
+    digitalWrite(alertPins[2], LOW);
+  }
+
+  ch4Sensor["ch4"] = gasCH4;
+
+  // =========================
+  // GỬI DỮ LIỆU CẢM BIẾN
+  // =========================
+
   char buffer[700];
   serializeJson(doc, buffer, sizeof(buffer));
 
-  mqttClient.publish(MQTT_TOPIC_SENSOR, buffer);
+  bool sent = mqttClient.publish(MQTT_TOPIC_SENSOR, buffer);
 
-  Serial.print("Sensor data sent: ");
+  Serial.print(sent ? "Sensor data sent: " : "Sensor publish failed: ");
   Serial.println(buffer);
 }
 
-// =====================================================
+// =========================
 // ĐIỀU KHIỂN MỘT THIẾT BỊ
-// =====================================================
+// =========================
+
 void controlDevice(
   uint8_t pin,
   int deviceId,
   const String& action,
-  int actionId) {
+  int actionId
+) {
   if (action != "ON" && action != "OFF") {
     return;
   }
 
-  int target = (action == "ON") ? HIGH : LOW;
+  int target = action == "ON" ? HIGH : LOW;
 
   digitalWrite(pin, target);
 
-  int deviceIds[] = { deviceId };
+  int deviceIds[] = {deviceId};
 
   const char* states[] = {
     action.c_str()
@@ -198,21 +375,22 @@ void controlDevice(
   sendStatus(deviceIds, states, statuses, 1, actionId);
 }
 
-// =====================================================
+// =========================
 // ĐIỀU KHIỂN TẤT CẢ THIẾT BỊ
-// =====================================================
+// =========================
+
 void controlAllDevices(const String& action, int actionId) {
   if (action != "ON" && action != "OFF") {
     return;
   }
 
-  int target = (action == "ON") ? HIGH : LOW;
+  int target = action == "ON" ? HIGH : LOW;
 
   digitalWrite(LED_D2, target);
   digitalWrite(LED_D5, target);
   digitalWrite(LED_D23, target);
 
-  int deviceIds[] = { 1, 2, 3 };
+  int deviceIds[] = {1, 2, 3};
 
   const char* states[] = {
     action.c_str(),
@@ -229,49 +407,20 @@ void controlAllDevices(const String& action, int actionId) {
   sendStatus(deviceIds, states, statuses, 3, actionId);
 }
 
-// =====================================================
+// =========================
 // NHẬN LỆNH MQTT
-// Payload: {"action_id":123,"action":"ON"}
-// =====================================================
+// =========================
+
 void callback(char* topic, byte* payload, unsigned int length) {
   String incoming(topic);
-  if (incoming == "alert/config") {
-    JsonDocument config;
-    if (deserializeJson(config, payload, length) || !config.is<JsonArray>()) return;
-    for (int i = 0; i < 3; i++) {
-      int newId = 0;
-      for (JsonObject item : config.as<JsonArray>())
-        if (item["gpio"].as<int>() == alertPins[i] && item["id"].is<int>()) newId = item["id"].as<int>();
-      if (newId != alertIds[i]) {
-        if (alertIds[i] > 0) mqttClient.unsubscribe(("alert/" + String(alertIds[i]) + "/blink").c_str());
-        blinking[i] = false;
-        levels[i] = false;
-        digitalWrite(alertPins[i], LOW);
-        alertIds[i] = newId;
-      }
-      // Subscribe after mapping arrives so retained blink states are replayed.
-      if (newId > 0) mqttClient.subscribe(("alert/" + String(newId) + "/blink").c_str());
-    }
-    return;
-  }
-  if (incoming.startsWith("alert/")) {
-    if (length != 1 || (payload[0] != '0' && payload[0] != '1')) return;
-    for (int i = 0; i < 3; i++)
-      if (alertIds[i] > 0 && incoming == "alert/" + String(alertIds[i]) + "/blink") {
-        blinking[i] = payload[0] == '1';
-        if (!blinking[i]) {
-          levels[i] = false;
-          digitalWrite(alertPins[i], LOW);
-        }
-      }
-    return;
-  }
+
   Serial.print("Received topic: ");
   Serial.println(topic);
 
   JsonDocument doc;
 
-  DeserializationError error = deserializeJson(doc, payload, length);
+  DeserializationError error =
+    deserializeJson(doc, payload, length);
 
   if (error) {
     Serial.println("JSON ERROR!");
@@ -297,21 +446,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Action: ");
   Serial.println(action);
 
-  String topicString = String(topic);
-
-  if (topicString == "device/1/command") {
+  if (incoming == "device/1/command") {
     controlDevice(LED_D2, 1, action, actionId);
-
-  } else if (topicString == "device/2/command") {
+  } else if (incoming == "device/2/command") {
     controlDevice(LED_D5, 2, action, actionId);
-
-  } else if (topicString == "device/3/command") {
+  } else if (incoming == "device/3/command") {
     controlDevice(LED_D23, 3, action, actionId);
-
-  } else if (topicString == "device/all/command") {
+  } else if (incoming == "device/all/command") {
     controlAllDevices(action, actionId);
-
-  } else if (topicString == "device/random/command") {
+  } else if (incoming == "device/random/command") {
     int deviceId = random(1, 4);
     uint8_t pin;
 
@@ -327,50 +470,51 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
-// =====================================================
+// =========================
 // KẾT NỐI LẠI MQTT
-// =====================================================
+// =========================
+
 void reconnectMQTT() {
   static unsigned long lastAttempt = 0;
-  if (millis() - lastAttempt < 2000) return;
+
+  if (millis() - lastAttempt < 2000) {
+    return;
+  }
+
   lastAttempt = millis();
+
   if (!mqttClient.connected()) {
     Serial.print("Connecting MQTT...");
 
     String clientId = "ESP32-";
     clientId += String(random(0xffff), HEX);
 
-    if (mqttClient.connect(
-          clientId.c_str(),
-          MQTT_USERNAME,
-          MQTT_PASSWORD)) {
+    if (
+      mqttClient.connect(
+        clientId.c_str(),
+        MQTT_USERNAME,
+        MQTT_PASSWORD
+      )
+    ) {
       Serial.println("MQTT connected!");
 
       mqttClient.subscribe(MQTT_TOPIC_CONTROL);
-      mqttClient.subscribe("alert/config");
-      mqttClient.subscribe("alert/+/blink");
 
-      Serial.print("Subscribed: ");
-      Serial.println(MQTT_TOPIC_CONTROL);
-
+      Serial.println("Subscribed to control topic");
     } else {
       Serial.print("MQTT failed, rc=");
       Serial.println(mqttClient.state());
-
-      // Retry on a later loop iteration.
     }
   }
 }
 
-// =====================================================
+// =========================
 // SETUP
-// =====================================================
+// =========================
+
 void setup() {
   Serial.begin(115200);
-  for (int i = 0; i < 3; i++) {
-    pinMode(alertPins[i], OUTPUT);
-    digitalWrite(alertPins[i], LOW);
-  }
+
   randomSeed(micros());
 
   pinMode(LED_D2, OUTPUT);
@@ -381,38 +525,57 @@ void setup() {
   digitalWrite(LED_D5, LOW);
   digitalWrite(LED_D23, LOW);
 
-  dht.begin();
+  for (int i = 0; i < 3; i++) {
+    pinMode(alertPins[i], OUTPUT);
+    digitalWrite(alertPins[i], LOW);
+  }
 
+  dht.begin();
   pinMode(LIGHT_PIN, INPUT);
 
   setupWiFi();
 
+  // Đồng bộ thời gian UTC
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+
+  struct tm timeInfo;
+  while (!getLocalTime(&timeInfo)) {
+    Serial.println("Dang dong bo thoi gian...");
+  }
+
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setBufferSize(1024);
   mqttClient.setSocketTimeout(1);
+
   espClient.setConnectionTimeout(1000);
+
   mqttClient.setCallback(callback);
 }
 
-// =====================================================
+// =========================
 // LOOP
-// =====================================================
+// =========================
+
 void loop() {
   tickAlerts();
+
   if (WiFi.status() != WL_CONNECTED) {
     static unsigned long retry = 0;
+
     if (millis() - retry >= 10000) {
       retry = millis();
       WiFi.reconnect();
     }
-    return;
-  }
-  if (!mqttClient.connected()) {
-    reconnectMQTT();
+  } else {
+    if (!mqttClient.connected()) {
+      reconnectMQTT();
+    }
+
+    mqttClient.loop();
   }
 
-  mqttClient.loop();
-
+  // Vẫn đọc và kiểm tra ngưỡng khi mất Wi-Fi.
+  // Bản tin gửi thất bại không được gửi lại.
   if (millis() - lastSensorRead >= SENSOR_INTERVAL) {
     lastSensorRead = millis();
     sendSensorData();

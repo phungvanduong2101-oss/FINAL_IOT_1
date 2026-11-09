@@ -91,3 +91,6 @@ Kiểm thử thủ công sau khi import SQL:
 
 ## Thống kê hàng 3 theo ngày
 Hàng 3 thay tổng tích lũy bằng số đợt bắt đầu trong ngày được chọn (mặc định hôm nay), dùng `GET /api/alerts/daily?date=YYYY-MM-DD`. Tính theo `started_at`, khoảng [00:00, 00:00 hôm sau) theo UTC+7; một đợt kéo dài qua đêm chỉ tính ở ngày bắt đầu. Ngày không có cảnh báo trả 0. Hai hàng biểu đồ và LED vẫn hiển thị realtime. Firmware hiện dùng random trực tiếp. Không cần đổi schema hoặc import lại SQL.
+
+## Controller và MQTT
+Đã bỏ services/alert.service.js. Hai route API dùng controllers/alert.controller.js. Xử lý ngưỡng, lịch sử, phát Socket và MQTT nằm trong config/mqtt.js. config/alert.js chỉ chứa ngưỡng và đơn vị dùng chung. Giữ nguyên logic repo hiện tại: tạo lịch sử khi bắt đầu, cập nhật resolved khi kết thúc.

@@ -4,7 +4,9 @@ const router = express.Router();
 const deviceController = require("../controllers/device.controller");
 const sensorController = require("../controllers/sensor.controller");
 const actionHistoryController = require("../controllers/action.controller");
+const { requireAuth } = require("../middlewares/auth.middleware");
 
+router.use(requireAuth);
 /**
  * @openapi
  * /api/sensors-data/latest:
@@ -259,47 +261,11 @@ router.get(
   actionHistoryController.getActionsHistory
 );
 
-router.get("/gas-dashboard", async (req, res) => {
-  try {
-    const service = require("../services/alert.service");
-    const data = await service.snapshot();
+const alertController = require("../controllers/alert.controller");
 
-    res.json({
-      code: "success",
-      data,
-    });
-  } catch (e) {
-    res.status(500).json({
-      message: e.message,
-    });
-  }
-});
+router.get("/gas-dashboard", alertController.getDashboard);
+router.get("/alerts/daily", alertController.getDailyAlerts);
+ 
+router.get("/alerts/history", alertController.getAlertsHistory);
 
-router.get("/alerts/daily", async (req, res) => {
-  const service = require("../services/alert.service");
-
-  // Kiểm tra ngày hợp lệ.
-  try {
-    service.dayRange(req.query.date);
-  } catch (e) {
-    return res.status(400).json({
-      message: e.message,
-    });
-  }
-
-  // Lấy số lần cảnh báo trong ngày.
-  try {
-    const data = await service.dailyCounts(req.query.date);
-
-    res.json({
-      code: "success",
-      date: req.query.date,
-      data,
-    });
-  } catch (e) {
-    res.status(500).json({
-      message: "Không tải được thống kê cảnh báo.",
-    });
-  }
-});
 module.exports = router;

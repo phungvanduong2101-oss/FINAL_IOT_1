@@ -11,7 +11,17 @@ function harness(){
  '../models/sensor-data.model':{create:async v=>{const r={...v,id:rows.length+1};rows.push(r);return {toJSON:()=>r}},findAll:async q=>rows.filter(r=>r.sensor_id===q.where.sensor_id).slice(-10).reverse()},
  '../config/socket':{getIO:()=>({emit:(name,data)=>events.push({name,data})})}
  };
- function load(){const context={require:n=>deps[n],module:{exports:{}},console};vm.runInNewContext(fs.readFileSync('services/alert.service.js','utf8'),context);return context.module.exports;}
+ function load(){
+ const mqttSource=fs.readFileSync('config/mqtt.js','utf8');
+ const mqttLogic=mqttSource.slice(mqttSource.indexOf('const valid'),mqttSource.indexOf('let queue'));
+ const controllerSource=fs.readFileSync('controllers/alert.controller.js','utf8');
+ const controllerLogic=controllerSource.slice(controllerSource.indexOf('async function snapshot'),controllerSource.indexOf('module.exports.getDashboard'));
+ const context={require:n=>deps[n],module:{exports:{}},console};
+ const source=fs.readFileSync('config/alert.js','utf8')+
+ '\nconst db=require("../config/database");const AlertDevice=require("../models/alert-device.model");const Device=AlertDevice;const History=require("../models/alert-history.model");const SensorData=require("../models/sensor-data.model");const {getIO}=require("../config/socket");\n'+mqttLogic+'\n'+controllerLogic+'\nmodule.exports={snapshot,sync,processPacket};';
+ vm.runInNewContext(source,context);return context.module.exports;
+ }
+
  return {service:load(),load,devices,history,rows,events,published,client:{publish:(topic,payload,opts,cb)=>{published.push({topic,payload,opts});cb()}}};
 }
 test('each gas: boundary, continuous alert, recovery, second episode',async()=>{

@@ -1,0 +1,68 @@
+mixin alertHistoryModal()
+  dialog#alert-detail-modal.alert-detail-modal
+    .alert-detail-header
+      h2 Lịch sử cảnh báo
+
+      button#alert-detail-close.alert-detail-close(
+        type="button"
+        aria-label="Đóng"
+      ) ×
+
+    .alert-detail-filters
+      .alert-detail-filter(style="margin-right: 300px;")
+        label(for="alert-detail-search")
+          strong Start Time 
+
+        input#alert-detail-search(
+          type="search"
+          placeholder="Search by start time..."
+          autocomplete="off"
+        )
+
+      .alert-detail-filter
+        label(for="alert-detail-gas")
+          strong Type
+
+        select#alert-detail-gas
+          option(value="ALL") All
+          option(value="n2") N2
+          option(value="co2") CO2
+          option(value="ch4") CH4 
+
+      .alert-detail-filter
+        label(for="alert-detail-sort")
+          strong Sort by
+        select#alert-detail-sort
+          option(value="DESC") Newest
+          option(value="ASC") Oldest 
+     
+      .alert-detail-filter
+        label(for="alert-detail-items")
+          strong Items
+
+        select#alert-detail-items
+          option(value="10") 10
+          option(value="20") 20
+          option(value="50") 50
+
+      button#alert-detail-refresh.alert-detail-button(type="button")
+        | Đặt lại
+
+    .alert-detail-table-wrap
+      table.alert-detail-table
+        thead
+          tr
+            th Type
+            th Threshold
+            th Max Value
+            th Start Time
+            th End Time
+
+        tbody#alert-detail-body
+          tr
+            td.alert-detail-empty(colspan="5")
+              | No data available.
+
+    .alert-detail-footer
+      span#alert-detail-summary
+      nav#alert-detail-pagination(aria-label="Phân trang lịch sử cảnh báo")
